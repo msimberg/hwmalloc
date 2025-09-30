@@ -154,6 +154,9 @@ class heap
     , m_tiny_heaps(s_tiny_limit / s_tiny_increment)
     , m_heaps(bucket_index(m_max_size) + 1)
     {
+        // Force never_free = true
+        m_never_free = true;
+
         for (std::size_t i = 0; i < m_tiny_heaps.size(); ++i)
             m_tiny_heaps[i] = std::make_unique<fixed_size_heap_type>(m_context,
                 s_tiny_increment * (i + 1), s_tiny_segment, m_never_free, m_num_reserve_segments);
