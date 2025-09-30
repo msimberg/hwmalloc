@@ -18,6 +18,8 @@
 #include <vector>
 #include <unordered_map>
 
+#include <iostream>
+
 namespace hwmalloc
 {
 // Main class of this library. Provides a heap for allocating memory on given numa nodes and
@@ -154,6 +156,8 @@ class heap
     , m_tiny_heaps(s_tiny_limit / s_tiny_increment)
     , m_heaps(bucket_index(m_max_size) + 1)
     {
+        std::cerr << "initializing hwmalloc heap\n";
+
         // Force never_free = true
         m_never_free = true;
 
