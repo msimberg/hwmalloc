@@ -105,13 +105,13 @@ class heap
 
     static const std::size_t s_tiny_limit = (1u << 7);   //   128
     static const std::size_t s_small_limit = (1u << 10); //  1024
-    static const std::size_t s_large_limit = (1u << 16); // 65536
+    static const std::size_t s_large_limit = (1u << 24); //  16MB
 
     static const std::size_t s_bucket_shift = log2_c(s_tiny_limit) - 1;
 
-    static const std::size_t s_tiny_segment = 0x200000;  // 2MB
-    static const std::size_t s_small_segment = 0x400000; // 4MB
-    static const std::size_t s_large_segment = 0x800000; // 8MB
+    static const std::size_t s_tiny_segment = 0xf00000;  // 16MB
+    static const std::size_t s_small_segment = 0xf00000; // 16MB
+    static const std::size_t s_large_segment = 0xf00000; // 16MB
 
     static const std::size_t s_tiny_increment_shift = 3;
     static const std::size_t s_tiny_increment = (1u << s_tiny_increment_shift); // = 8
