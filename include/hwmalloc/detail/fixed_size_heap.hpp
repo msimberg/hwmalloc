@@ -37,7 +37,8 @@ class fixed_size_heap
 
   public:
     fixed_size_heap(Context* context, std::size_t block_size, std::size_t segment_size,
-        bool never_free, std::size_t num_reserve_segments)
+        bool never_free, std::size_t num_reserve_segments,
+        const typename pool_type::segment_alloc_cb_type& segment_alloc_cb = nullptr)
     : m_context(context)
     , m_block_size(block_size)
     , m_segment_size(segment_size)
@@ -52,12 +53,13 @@ class fixed_size_heap
         for (auto [n, i] : numa().local_nodes())
         {
             m_pools[i] = std::make_unique<pool_type>(m_context, m_block_size, m_segment_size, n,
-                m_never_free, m_num_reserve_segments);
+                m_never_free, m_num_reserve_segments, segment_alloc_cb);
 #if HWMALLOC_ENABLE_DEVICE
             for (unsigned int j = 0; j < m_num_devices; ++j)
             {
                 m_device_pools[i * m_num_devices + j] = std::make_unique<pool_type>(m_context,
-                    m_block_size, m_segment_size, n, (int)j, m_never_free, m_num_reserve_segments);
+                    m_block_size, m_segment_size, n, (int)j, m_never_free, m_num_reserve_segments,
+                    segment_alloc_cb);
             }
 #endif
         }

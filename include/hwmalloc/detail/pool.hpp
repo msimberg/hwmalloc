@@ -14,6 +14,7 @@
 #include <mutex>
 #include <memory>
 #include <stdexcept>
+#include <functional>
 
 namespace hwmalloc
 {
@@ -27,6 +28,7 @@ class pool
     using block_type = typename segment_type::block;
     using stack_type = boost::lockfree::stack<block_type>;
     using segment_map = std::unordered_map<segment_type*, std::unique_ptr<segment_type>>;
+    using segment_alloc_cb_type = std::function<void()>;
 
   private:
     static std::size_t num_pages(std::size_t segment_size) noexcept
@@ -48,20 +50,25 @@ class pool
     }
 
   private:
-    Context*    m_context;
-    std::size_t m_block_size;
-    std::size_t m_segment_size;
-    std::size_t m_numa_node;
-    bool        m_never_free;
-    std::size_t m_num_reserve_segments;
-    stack_type  m_free_stack;
-    segment_map m_segments;
-    std::mutex  m_mutex;
-    int         m_device_id = 0;
-    bool        m_allocate_on_device = false;
+    Context*                     m_context;
+    std::size_t                  m_block_size;
+    std::size_t                  m_segment_size;
+    std::size_t                  m_numa_node;
+    bool                         m_never_free;
+    std::size_t                  m_num_reserve_segments;
+    stack_type                   m_free_stack;
+    segment_map                  m_segments;
+    std::mutex                   m_mutex;
+    int                          m_device_id = 0;
+    bool                         m_allocate_on_device = false;
+    // Callback executed when a segment is allocated. Can be used to track the number of actual
+    // memory allocations.
+    const segment_alloc_cb_type& m_segment_alloc_cb;
 
     void add_segment()
     {
+        if (m_segment_alloc_cb)
+            m_segment_alloc_cb();
         auto a =
             check_allocation(numa().allocate(num_pages(m_segment_size), m_numa_node), m_numa_node);
 #if HWMALLOC_ENABLE_DEVICE
@@ -90,7 +97,8 @@ class pool
 
   public:
     pool(Context* context, std::size_t block_size, std::size_t segment_size, std::size_t numa_node,
-        bool never_free, std::size_t num_reserve_segments)
+        bool never_free, std::size_t num_reserve_segments,
+        const segment_alloc_cb_type& segment_alloc_cb)
     : m_context{context}
     , m_block_size{block_size}
     , m_segment_size{segment_size}
@@ -98,13 +106,15 @@ class pool
     , m_never_free{never_free}
     , m_num_reserve_segments{std::max(num_reserve_segments, 1ul)}
     , m_free_stack(segment_size / block_size)
+    , m_segment_alloc_cb(segment_alloc_cb)
     {
     }
 
 #if HWMALLOC_ENABLE_DEVICE
     pool(Context* context, std::size_t block_size, std::size_t segment_size, std::size_t numa_node,
-        int device_id, bool never_free, std::size_t num_reserve_segments)
-    : pool(context, block_size, segment_size, numa_node, never_free, num_reserve_segments)
+        int device_id, bool never_free, std::size_t num_reserve_segments,
+        const segment_alloc_cb_type& segment_alloc_cb)
+    : pool(context, block_size, segment_size, numa_node, never_free, num_reserve_segments, segment_alloc_cb)
     {
         m_device_id = device_id;
         m_allocate_on_device = true;

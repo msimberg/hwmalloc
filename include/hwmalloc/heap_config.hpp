@@ -39,6 +39,7 @@ struct heap_config
     std::size_t                  m_tiny_segment_size;
     std::size_t                  m_small_segment_size;
     std::size_t                  m_large_segment_size;
+    std::size_t                  m_num_huge_alloc_warn_threshold;
     static constexpr std::size_t m_tiny_increment_shift = 3;
     static constexpr std::size_t m_tiny_increment = (1u << m_tiny_increment_shift);
     std::size_t                  m_num_tiny_heaps = m_tiny_limit / m_tiny_increment;
@@ -47,7 +48,7 @@ struct heap_config
 
     heap_config(bool never_free, std::size_t num_reserve_segments, std::size_t tiny_limit,
         std::size_t small_limit, std::size_t large_limit, std::size_t tiny_segment_size,
-        std::size_t small_segment_size, std::size_t large_segment_size);
+        std::size_t small_segment_size, std::size_t large_segment_size, std::size_t num_huge_alloc_warn_threshold);
 };
 
 heap_config const& get_default_heap_config();

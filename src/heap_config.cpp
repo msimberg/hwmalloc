@@ -74,7 +74,7 @@ get_env_size_t(const char* name, std::size_t default_value) noexcept
 
 heap_config::heap_config(bool never_free, std::size_t num_reserve_segments, std::size_t tiny_limit,
     std::size_t small_limit, std::size_t large_limit, std::size_t tiny_segment_size,
-    std::size_t small_segment_size, std::size_t large_segment_size)
+    std::size_t small_segment_size, std::size_t large_segment_size, std::size_t num_huge_alloc_warn_threshold)
 : m_never_free{never_free}
 , m_num_reserve_segments{num_reserve_segments}
 , m_tiny_limit{detail::round_to_pow_of_2(tiny_limit)}
@@ -83,6 +83,7 @@ heap_config::heap_config(bool never_free, std::size_t num_reserve_segments, std:
 , m_tiny_segment_size{detail::round_to_pow_of_2(tiny_segment_size)}
 , m_small_segment_size{detail::round_to_pow_of_2(small_segment_size)}
 , m_large_segment_size{detail::round_to_pow_of_2(large_segment_size)}
+, m_num_huge_alloc_warn_threshold{num_huge_alloc_warn_threshold}
 {
     // Validate that tiny_limit < small_limit < large_limit
     if (!(m_tiny_limit < m_small_limit && m_small_limit < m_large_limit))
@@ -122,8 +123,8 @@ get_default_heap_config()
         detail::get_env_size_t("HWMALLOC_LARGE_LIMIT", (1u << 21)),        // 2MiB
         detail::get_env_size_t("HWMALLOC_TINY_SEGMENT_SIZE", (1u << 16)),  // 64KiB
         detail::get_env_size_t("HWMALLOC_SMALL_SEGMENT_SIZE", (1u << 16)), // 64KiB
-        detail::get_env_size_t("HWMALLOC_LARGE_SEGMENT_SIZE", (1u << 21))  // 2MiB
-
+        detail::get_env_size_t("HWMALLOC_LARGE_SEGMENT_SIZE", (1u << 21)),  // 2MiB
+        detail::get_env_size_t("HWMALLOC_NUM_HUGE_ALLOC_WARN_THERESHOLD", 10)
     };
 
     return config;
